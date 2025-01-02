@@ -13,6 +13,7 @@
   inherit (builtins) filter attrValues mapAttrs getAttr concatLists;
 
   cfg = config.hjem;
+  enabledUsers = filterAttrs (_: u: u.enable) cfg.users;
 
   hjemModule = submoduleWith {
     description = "Hjem NixOS module";
@@ -83,32 +84,24 @@ in {
   };
 
   config = {
-    users.users = (mapAttrs (_: v: mkIf v.enable {inherit (v) packages;})) cfg.users;
+    users.users = (mapAttrs (_: v: {inherit (v) packages;})) enabledUsers;
 
     # Constructed rule string that consists of the type, target, and source
     # of a tmpfile. Files with 'null' sources are filtered before the rule
     # is constructed.
     systemd.user.tmpfiles.users =
-      mapAttrs (_: {
-        enable,
-        files,
-        ...
-      }: {
-        rules =
-          mkIf enable
-          (
-            pipe files [
-              attrValues
-              (filter (f: f.enable && f.source != null))
-              (map (
-                file:
-                # L+ will recreate, i.e., clobber existing files.
-                "L${optionalString file.clobber "+"} '${file.target}' - - - - ${file.source}"
-              ))
-            ]
-          );
+      mapAttrs (_: u: {
+        rules = pipe u.files [
+          attrValues
+          (filter (f: f.enable && f.source != null))
+          (map (
+            file:
+            # L+ will recreate, i.e., clobber existing files.
+            "L${optionalString file.clobber "+"} '${file.target}' - - - - ${file.source}"
+          ))
+        ];
       })
-      cfg.users;
+      enabledUsers;
 
     warnings =
       concatLists
@@ -119,7 +112,7 @@ in {
             )
             v.warnings
         )
-        cfg.users);
+        enabledUsers);
 
     assertions =
       concatLists
@@ -133,6 +126,6 @@ in {
           message = "${user} profile: ${message}";
         })
         config.assertions)
-      cfg.users);
+      enabledUsers);
   };
 }
