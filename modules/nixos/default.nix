@@ -28,7 +28,7 @@
       concatLists
       [
         [
-          ../common.nix
+          ../common/user.nix
           ({name, ...}: let
             user = getAttr name config.users.users;
           in {
