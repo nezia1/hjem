@@ -4,12 +4,14 @@
   lib,
   ...
 }: let
+  inherit (builtins) attrNames;
   inherit (lib.modules) mkIf mkMerge;
   inherit (lib.options) mkOption literalExpression;
   inherit (lib.lists) filter map flatten concatLists;
   inherit (lib.attrsets) filterAttrs mapAttrs' attrValues mapAttrsToList;
   inherit (lib.trivial) flip;
   inherit (lib.types) bool attrsOf submoduleWith listOf raw attrs;
+  inherit (lib.strings) concatMapStrings concatMapStringsSep;
 
   cfg = config.hjem;
 
@@ -20,7 +22,10 @@
     modules = concatLists [
       [
         ({name, ...}: {
-          imports = [../common.nix];
+          imports = [
+            ../common.nix
+            ./environment.nix
+          ];
 
           config = {
             user = config.users.users.${name}.name;
