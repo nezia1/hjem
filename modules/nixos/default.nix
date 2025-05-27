@@ -17,34 +17,26 @@
   enabledUsers = filterAttrs (_: u: u.enable) cfg.users;
 
   manifests = let
-    writeManifest = username: let
-      defaultFilePerms = "644";
+    defaultFilePerms = "644";
 
-      mapFiles =
-        lib.attrsets.foldlAttrs (
-          files: _: value:
-            if value.enable -> value.source == null
-            then files
-            else
-              (
-                files
-                ++ [
-                  {
-                    type = "symlink";
-                    inherit (value) source target;
-                    inherit (config.users.users."${username}") uid;
-                    permissions = defaultFilePerms;
-                  }
-                ]
-              )
-        )
-        []
-        cfg.users."${username}".files;
-    in
+    mapFiles = username: files:
+      lib.attrsets.foldlAttrs (accum: _: value:
+        if value.enable -> value.source == null
+        then accum
+        else
+          accum ++ lib.singleton {
+            type = "symlink";
+            inherit (value) source target;
+            inherit (config.users.users."${username}") uid;
+            permissions = defaultFilePerms;
+        }
+      ) [] files;
+
+    writeManifest = username:
       pkgs.writeTextDir "manifest-${username}.json" (builtins.toJSON {
         "clobber_by_default" = cfg.users."${username}".clobberFiles;
         version = 1;
-        files = mapFiles;
+        files = mapFiles username cfg.users."${username}".files;
       });
   in
     pkgs.symlinkJoin
