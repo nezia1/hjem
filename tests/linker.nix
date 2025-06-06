@@ -30,10 +30,16 @@ in
             };
           };
         };
+
+        specialisation.fileChangedSystem.configuration = {
+          hjem.users.alice.files.".config/foo".text = "Hello new world!";
+        };
       };
     };
 
-    testScript = ''
+    testScript = {nodes, ...}: let
+      fileChangedSystem = "${nodes.node1.system.build.toplevel}/specialisation/fileChangedSystem";
+    in ''
       machine.succeed("loginctl enable-linger alice")
 
       with subtest("Activation service runs correctly"):
@@ -47,5 +53,9 @@ in
         machine.succeed("test -L ${userHome}/.config/foo")
         machine.succeed("grep \"Hello world!\" ${userHome}/.config/foo")
 
+      with subtest("File gets overwritten when changed"):
+        machine.succeed("${fileChangedSystem}/bin/switch-to-configuration test")
+        machine.succeed("test -L ${userHome}/.config/foo")
+        machine.succeed("grep \"Hello new world!\" ${userHome}/.config/foo")
     '';
   }
