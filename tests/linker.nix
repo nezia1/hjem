@@ -42,5 +42,10 @@ in
 
       with subtest("Manifest gets created"):
         machine.succeed("[ -f /var/lib/hjem/manifest-alice.json ]")
+
+      with subtest("File gets linked"):
+        machine.succeed("test -L ${userHome}/.config/foo")
+        machine.succeed("grep \"Hello world!\" ${userHome}/.config/foo")
+
     '';
   }
