@@ -20,8 +20,6 @@
   linker = getExe cfg.linker;
 
   manifests = let
-    defaultFilePerms = "644";
-
     mapFiles = _: files:
       lib.attrsets.foldlAttrs (
         accum: _: value:
@@ -32,7 +30,6 @@
             ++ lib.singleton {
               type = "symlink";
               inherit (value) source target;
-              permissions = defaultFilePerms;
             }
       ) []
       files;
