@@ -9,7 +9,7 @@
   inherit (lib.options) literalExpression mkOption;
   inherit (lib.strings) optionalString;
   inherit (lib.trivial) pipe;
-  inherit (lib.types) attrs attrsOf bool listOf nullOr package raw submoduleWith either singleLineString;
+  inherit (lib.types) attrs attrsOf bool listOf nullOr package raw submoduleWith either singleLineStr;
   inherit (lib.meta) getExe;
   inherit (builtins) filter attrValues mapAttrs getAttr concatLists concatStringsSep typeOf toJSON;
 
@@ -131,14 +131,25 @@ in {
       default = null;
       description = ''
         Method to use to link files.
+
         `null` will use `systemd-tmpfiles`, which is only supported on Linux.
-        This is the default file linker on Linux, as it is the more mature linker, but it has the downside of leaving
-        behind symlinks that may not get invalidated until the next GC, if an entry is removed from {option}`hjem.<user>.files`.
-        Specifying a package will use a custom file linker that uses an internally-generated manifest.
-        The custom file linker must use this manifest to create or remove links as needed, by comparing the
-        manifest of the currently activated system with that of the new system.
-        This prevents dangling symlinks when an entry is removed from {option}`hjem.<user>.files`.
-        This linker is currently experimental; once it matures, it may become the default in the future.
+
+        This is the default file linker on Linux, as it is the more mature
+        linker, but it has the downside of leaving behind symlinks that may
+        not get invalidated until the next GC, if an entry is removed from
+        {option}`hjem.<user>.files`.
+
+        Specifying a package will use a custom file linker that uses an
+        internally-generated manifest. The custom file linker must use this
+        manifest to create or remove links as needed, by comparing the manifest
+        of the currently activated system with that of the new system.
+        This prevents dangling symlinks when an entry is removed from
+        {option}`hjem.<user>.files`.
+
+        :::{.note}
+        This linker is currently experimental; once it matures, it may become
+        the default in the future.
+        :::
       '';
       type = nullOr package;
     };
@@ -147,11 +158,12 @@ in {
       default = [];
       description = ''
         Additional arguments to pass to the linker.
+
         This is for external linker modules to set, to allow extending the default set of hjem behaviours.
         It accepts either a list of strings, which will be passed directly as arguments, or an attribute set, which will be
         serialized to JSON and passed as `--linker-opts options.json`.
       '';
-      type = either (listOf singleLineString) attrs;
+      type = either (listOf singleLineStr) attrs;
     };
   };
 
