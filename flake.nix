@@ -1,8 +1,11 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs?ref=nixos-unstable";
+
+    # Sleek, manifest based file handler.
+    # Our awesome atomic file linker.
     smfh = {
-      url = "github:Gerg-L/smfh";
+      url = "github:feel-co/smfh";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
