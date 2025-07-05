@@ -13,7 +13,7 @@
   inherit (lib.modules) mkIf mkDefault mkDerivedConfig mkMerge;
   inherit (lib.options) mkOption literalExpression mkEnableOption;
   inherit (lib.strings) hasPrefix;
-  inherit (lib.types) anything attrsOf bool either functionTo lines listOf nullOr package path str submodule oneOf int;
+  inherit (lib.types) addCheck anything attrsOf bool either functionTo int lines listOf nullOr package path str submodule oneOf;
   inherit (builtins) isList;
 
   cfg = config;
@@ -59,7 +59,13 @@
         };
 
         generator = lib.mkOption {
-          type = nullOr (functionTo (either options.source.type options.text.type));
+          # functionTo doesn't actually check the return type, so do that ourselves
+          type = addCheck (nullOr (functionTo (either options.source.type options.text.type))) (x: let
+            generatedValue = x config.value;
+            generatesDrv = options.source.type.check generatedValue;
+            generatesStr = options.text.type.check generatedValue;
+          in
+            x != null -> (generatesDrv || generatesStr));
           default = null;
           description = ''
             Function that when applied to `value` will create the `source` or `text` of the file.
@@ -112,6 +118,9 @@
 
       config = let
         generatedValue = config.generator config.value;
+        hasGenerator = config.generator != null;
+        generatesDrv = options.source.type.check generatedValue;
+        generatesStr = options.text.type.check generatedValue;
       in
         mkMerge [
           {
@@ -123,11 +132,11 @@
               }));
           }
 
-          (lib.mkIf (config.generator != null && options.source.type.check generatedValue) {
+          (lib.mkIf (hasGenerator && generatesDrv) {
             source = mkDefault generatedValue;
           })
 
-          (lib.mkIf (config.generator != null && options.text.type.check generatedValue) {
+          (lib.mkIf (hasGenerator && generatesStr) {
             text = mkDefault generatedValue;
           })
         ];
