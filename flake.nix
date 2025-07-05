@@ -28,7 +28,7 @@
     packages = forAllSystems (system: {
       # Expose the 'smfh' instance used by Hjem as a package in the Hjem flake
       # outputs. This allows consuming the exact copy of smfh used by Hjem.
-      smfh = inputs.smfh.packages.${system}.smfh;
+      inherit (inputs.smfh.packages.${system}) smfh;
     });
 
     checks = forAllSystems (system: let
@@ -56,6 +56,8 @@
         packages = attrValues {
           inherit
             (pkgs)
+            # formatter
+            alejandra
             # cue validator
             cue
             go
@@ -64,6 +66,22 @@
       };
     });
 
-    formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.alejandra);
+    formatter = forAllSystems (
+      system: let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in
+        pkgs.writeShellApplication {
+          name = "nix3-fmt-wrapper";
+
+          runtimeInputs = [
+            pkgs.alejandra
+            pkgs.fd
+          ];
+
+          text = ''
+            fd "$@" -t f -e nix -x alejandra -q '{}'
+          '';
+        }
+    );
   };
 }
