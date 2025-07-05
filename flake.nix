@@ -56,6 +56,8 @@
         packages = attrValues {
           inherit
             (pkgs)
+            # formatter
+            alejandra
             # cue validator
             cue
             go
@@ -64,6 +66,22 @@
       };
     });
 
-    formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.alejandra);
+    formatter = forAllSystems (
+      system: let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in
+        pkgs.writeShellApplication {
+          name = "nix3-fmt-wrapper";
+
+          runtimeInputs = [
+            pkgs.alejandra
+            pkgs.fd
+          ];
+
+          text = ''
+            fd "$@" -t f -e nix -x alejandra -q '{}'
+          '';
+        }
+    );
   };
 }
