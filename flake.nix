@@ -28,7 +28,7 @@
     packages = forAllSystems (system: {
       # Expose the 'smfh' instance used by Hjem as a package in the Hjem flake
       # outputs. This allows consuming the exact copy of smfh used by Hjem.
-      smfh = inputs.smfh.packages.${system}.smfh;
+      inherit (inputs.smfh.packages.${system}) smfh;
     });
 
     checks = forAllSystems (system: let

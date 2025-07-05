@@ -9,9 +9,9 @@
   ...
 }: let
   inherit (lib.attrsets) mapAttrsToList;
-  inherit (lib.strings) concatMapStringsSep concatLines;
-  inherit (lib.modules) mkIf mkDefault mkDerivedConfig mkMerge;
-  inherit (lib.options) mkOption literalExpression mkEnableOption;
+  inherit (lib.strings) concatLines concatMapStringsSep;
+  inherit (lib.modules) mkDefault mkDerivedConfig mkIf mkMerge;
+  inherit (lib.options) literalExpression mkEnableOption mkOption;
   inherit (lib.strings) hasPrefix;
   inherit (lib.types) addCheck anything attrsOf bool either functionTo int lines listOf nullOr package path str submodule oneOf;
   inherit (builtins) isList;
