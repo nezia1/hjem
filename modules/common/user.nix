@@ -61,7 +61,11 @@
         generator = lib.mkOption {
           type = nullOr (functionTo (either options.source.type options.text.type));
           default = null;
-          description = "Function that when applied to `value` will create the `text` of the file.";
+          description = ''
+            Function that when applied to `value` will create the `source` or `text` of the file.
+
+            Detection is automatic, as we check if the `generator` generates a derivation or a string after applying to `value`.
+          '';
           example = literalExpression "lib.generators.toGitINI";
         };
 
