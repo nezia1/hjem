@@ -233,6 +233,26 @@ in {
           description = "Config files to be managed by Hjem";
         };
       };
+      data = {
+        home = mkOption {
+          type = path;
+          default = "${cfg.directory}/.local/share";
+          defaultText = "~/.local/share";
+          description = ''
+            The XDG data directory for the user, to which files configured in
+            {option}`hjem.users.<name>.xdg.data.files` will be relative to by default.
+
+            Adds {env}`XDG_DATA_HOME` to {option}`environment.sessionVariables` for
+            this user if {option}`xdg.enable` is `true`.
+          '';
+        };
+        files = mkOption {
+          default = {};
+          type = attrsOf (fileType cfg.xdg.data.home);
+          example = {"foo.txt".source = "Hello World";};
+          description = "data files to be managed by Hjem";
+        };
+      };
     };
 
     packages = mkOption {
@@ -275,6 +295,7 @@ in {
       sessionVariables = mkIf cfg.xdg.enable {
         XDG_CACHE_HOME = cfg.xdg.cache.home;
         XDG_CONFIG_HOME = cfg.xdg.config.home;
+        XDG_DATA_HOME = cfg.xdg.data.home;
       };
       loadEnv = let
         toEnv = env:

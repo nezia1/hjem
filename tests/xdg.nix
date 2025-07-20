@@ -41,6 +41,15 @@ in
                   };
                 };
               };
+              data = {
+                home = userHome + "/customDataHome";
+                files = {
+                  "baz.toml" = {
+                    generator = (pkgs.formats.toml {}).generate "baz.toml";
+                    value = {baz = true;};
+                  };
+                };
+              };
             };
           };
         };
@@ -65,6 +74,7 @@ in
       # Test file created by Hjem
       machine.succeed("[ -L ~alice/customCacheHome/foo ]")
       machine.succeed("[ -L ~alice/customConfigHome/bar.json ]")
+      machine.succeed("[ -L ~alice/customDataHome/baz.toml ]")
 
       # Test regular files, created by systemd-tmpfiles
       machine.succeed("[ -d ~alice/user_tmpfiles_created ]")

@@ -23,6 +23,7 @@
     // (optionalAttrs user.xdg.enable (
       user.xdg.cache.files
       // user.xdg.config.files
+      // user.xdg.data.files
     ));
 
   linker = getExe cfg.linker;
