@@ -189,6 +189,31 @@ in {
       description = "Files to be managed by Hjem";
     };
 
+    xdg = {
+      enable = mkEnableOption "XDG management for this user";
+
+      config = {
+        home = mkOption {
+          type = path;
+          default = "${cfg.directory}/.config";
+          defaultText = "~/.config";
+          description = ''
+            The XDG config directory for the user, to which files configured in
+            {option}`hjem.users.<name>.xdg.config.files` will be relative to by default.
+
+            Adds {env}`XDG_CONFIG_HOME` to {option}`environment.sessionVariables` for
+            this user if {option}`xdg.enable` is `true`.
+          '';
+        };
+        files = mkOption {
+          default = {};
+          type = attrsOf (fileType cfg.xdg.config.home);
+          example = {"foo.txt".source = "Hello World";};
+          description = "Config files to be managed by Hjem";
+        };
+      };
+    };
+
     packages = mkOption {
       type = listOf package;
       default = [];
@@ -225,18 +250,22 @@ in {
   };
 
   config = {
-    environment.loadEnv = let
-      toEnv = env:
-        if isList env
-        then concatMapStringsSep ":" toString env
-        else toString env;
-    in
-      lib.pipe cfg.environment.sessionVariables [
-        (mapAttrsToList (name: value: "export ${name}=\"${toEnv value}\""))
-        concatLines
-        (pkgs.writeShellScript "load-env")
-      ];
-
+    environment = {
+      sessionVariables = mkIf cfg.xdg.enable {
+        XDG_CONFIG_HOME = cfg.xdg.config.home;
+      };
+      loadEnv = let
+        toEnv = env:
+          if isList env
+          then concatMapStringsSep ":" toString env
+          else toString env;
+      in
+        lib.pipe cfg.environment.sessionVariables [
+          (mapAttrsToList (name: value: "export ${name}=\"${toEnv value}\""))
+          concatLines
+          (pkgs.writeShellScript "load-env")
+        ];
+    };
     assertions = [
       {
         assertion = cfg.user != "";

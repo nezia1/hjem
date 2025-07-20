@@ -4,7 +4,7 @@
   lib,
   ...
 }: let
-  inherit (lib.attrsets) filterAttrs mapAttrsToList;
+  inherit (lib.attrsets) filterAttrs mapAttrsToList optionalAttrs;
   inherit (lib.modules) mkIf mkMerge;
   inherit (lib.options) literalExpression mkOption;
   inherit (lib.strings) optionalString;
@@ -17,6 +17,10 @@
 
   enabledUsers = filterAttrs (_: u: u.enable) cfg.users;
   disabledUsers = filterAttrs (_: u: !u.enable) cfg.users;
+
+  userFiles = user:
+    user.files
+    // (optionalAttrs user.xdg.enable user.xdg.config.files);
 
   linker = getExe cfg.linker;
 
@@ -44,7 +48,9 @@
         text = builtins.toJSON {
           clobber_by_default = cfg.users."${username}".clobberFiles;
           version = 1;
-          files = mapFiles username cfg.users."${username}".files;
+          files = mapFiles username (
+            userFiles cfg.users."${username}"
+          );
         };
         checkPhase = ''
           set -e
@@ -210,7 +216,7 @@ in {
 
       systemd.user.tmpfiles.users =
         mapAttrs (_: u: {
-          rules = pipe u.files [
+          rules = pipe (userFiles u) [
             attrValues
             (filter (f: f.enable && f.source != null))
             (map (
