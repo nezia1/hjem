@@ -24,6 +24,7 @@
       user.xdg.cache.files
       // user.xdg.config.files
       // user.xdg.data.files
+      // user.xdg.state.files
     ));
 
   linker = getExe cfg.linker;

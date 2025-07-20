@@ -233,6 +233,7 @@ in {
           description = "Config files to be managed by Hjem";
         };
       };
+
       data = {
         home = mkOption {
           type = path;
@@ -251,6 +252,27 @@ in {
           type = attrsOf (fileType cfg.xdg.data.home);
           example = {"foo.txt".source = "Hello World";};
           description = "data files to be managed by Hjem";
+        };
+      };
+
+      state = {
+        home = mkOption {
+          type = path;
+          default = "${cfg.directory}/.local/state";
+          defaultText = "~/.local/share";
+          description = ''
+            The XDG state directory for the user, to which files configured in
+            {option}`hjem.users.<name>.xdg.state.files` will be relative to by default.
+
+            Adds {env}`XDG_STATE_HOME` to {option}`environment.sessionVariables` for
+            this user if {option}`xdg.enable` is `true`.
+          '';
+        };
+        files = mkOption {
+          default = {};
+          type = attrsOf (fileType cfg.xdg.state.home);
+          example = {"foo.txt".source = "Hello World";};
+          description = "state files to be managed by Hjem";
         };
       };
     };
@@ -296,6 +318,7 @@ in {
         XDG_CACHE_HOME = cfg.xdg.cache.home;
         XDG_CONFIG_HOME = cfg.xdg.config.home;
         XDG_DATA_HOME = cfg.xdg.data.home;
+        XDG_STATE_HOME = cfg.xdg.state.home;
       };
       loadEnv = let
         toEnv = env:
