@@ -20,7 +20,10 @@
 
   userFiles = user:
     user.files
-    // (optionalAttrs user.xdg.enable user.xdg.config.files);
+    // (optionalAttrs user.xdg.enable (
+      user.xdg.cache.files
+      // user.xdg.config.files
+    ));
 
   linker = getExe cfg.linker;
 

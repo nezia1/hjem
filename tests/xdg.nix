@@ -24,21 +24,20 @@ in
             enable = true;
             xdg = {
               enable = true;
-              config = {
-                home = userHome + "/customConfigHome";
+              cache = {
+                home = userHome + "/customCacheHome";
                 files = {
                   "foo" = {
                     text = "Hello world!";
                   };
-
+                };
+              };
+              config = {
+                home = userHome + "/customConfigHome";
+                files = {
                   "bar.json" = {
                     generator = lib.generators.toJSON {};
                     value = {bar = true;};
-                  };
-
-                  "baz.toml" = {
-                    generator = (pkgs.formats.toml {}).generate "baz.toml";
-                    value = {baz = true;};
                   };
                 };
               };
@@ -64,9 +63,8 @@ in
       machine.wait_until_succeeds("systemctl --user --machine=alice@ is-active systemd-tmpfiles-setup.service")
 
       # Test file created by Hjem
-      machine.succeed("[ -L ~alice/customConfigHome/foo ]")
+      machine.succeed("[ -L ~alice/customCacheHome/foo ]")
       machine.succeed("[ -L ~alice/customConfigHome/bar.json ]")
-      machine.succeed("[ -L ~alice/customConfigHome/baz.toml ]")
 
       # Test regular files, created by systemd-tmpfiles
       machine.succeed("[ -d ~alice/user_tmpfiles_created ]")

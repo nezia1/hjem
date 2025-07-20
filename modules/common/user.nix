@@ -192,6 +192,27 @@ in {
     xdg = {
       enable = mkEnableOption "XDG management for this user";
 
+      cache = {
+        home = mkOption {
+          type = path;
+          default = "${cfg.directory}/.cache";
+          defaultText = "~/.cache";
+          description = ''
+            The XDG cache directory for the user, to which files configured in
+            {option}`hjem.users.<name>.xdg.cache.files` will be relative to by default.
+
+            Adds {env}`XDG_CACHE_HOME` to {option}`environment.sessionVariables` for
+            this user if {option}`xdg.enable` is `true`.
+          '';
+        };
+        files = mkOption {
+          default = {};
+          type = attrsOf (fileType cfg.xdg.cache.home);
+          example = {"foo.txt".source = "Hello World";};
+          description = "Cache files to be managed by Hjem";
+        };
+      };
+
       config = {
         home = mkOption {
           type = path;
@@ -252,6 +273,7 @@ in {
   config = {
     environment = {
       sessionVariables = mkIf cfg.xdg.enable {
+        XDG_CACHE_HOME = cfg.xdg.cache.home;
         XDG_CONFIG_HOME = cfg.xdg.config.home;
       };
       loadEnv = let
