@@ -53,7 +53,7 @@ in
               state = {
                 home = userHome + "/customStateHome";
                 files = {
-                  "bar" = {
+                  "foo" = {
                     source = pkgs.writeText "file-bar" "Hello World!";
                   };
                 };
@@ -83,7 +83,7 @@ in
       machine.succeed("[ -L ~alice/customCacheHome/foo ]")
       machine.succeed("[ -L ~alice/customConfigHome/bar.json ]")
       machine.succeed("[ -L ~alice/customDataHome/baz.toml ]")
-      machine.succeed("[ -L ~alice/customStateHome/bar ]")
+      machine.succeed("[ -L ~alice/customStateHome/foo ]")
 
       # Test regular files, created by systemd-tmpfiles
       machine.succeed("[ -d ~alice/user_tmpfiles_created ]")

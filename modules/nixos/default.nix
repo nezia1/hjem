@@ -4,7 +4,8 @@
   lib,
   ...
 }: let
-  inherit (lib.attrsets) filterAttrs mapAttrsToList optionalAttrs;
+  inherit (lib.attrsets) filterAttrs mapAttrsToList;
+  inherit (lib.lists) optionals;
   inherit (lib.modules) mkIf mkMerge;
   inherit (lib.options) literalExpression mkOption;
   inherit (lib.strings) optionalString;
@@ -19,18 +20,20 @@
   disabledUsers = filterAttrs (_: u: !u.enable) cfg.users;
 
   userFiles = user:
-    user.files
-    // (optionalAttrs user.xdg.enable (
+    [
+      user.files
+    ]
+    ++ (optionals user.xdg.enable [
       user.xdg.cache.files
-      // user.xdg.config.files
-      // user.xdg.data.files
-      // user.xdg.state.files
-    ));
+      user.xdg.config.files
+      user.xdg.data.files
+      user.xdg.state.files
+    ]);
 
   linker = getExe cfg.linker;
 
   manifests = let
-    mapFiles = _: files:
+    mapFiles = files:
       lib.attrsets.foldlAttrs (
         accum: _: value:
           if value.enable -> value.source == null
@@ -53,7 +56,7 @@
         text = builtins.toJSON {
           clobber_by_default = cfg.users."${username}".clobberFiles;
           version = 1;
-          files = mapFiles username (
+          files = concatMap mapFiles (
             userFiles cfg.users."${username}"
           );
         };
@@ -222,7 +225,7 @@ in {
       systemd.user.tmpfiles.users =
         mapAttrs (_: u: {
           rules = pipe (userFiles u) [
-            attrValues
+            (concatMap attrValues)
             (filter (f: f.enable && f.source != null))
             (map (
               file:
