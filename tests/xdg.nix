@@ -22,6 +22,12 @@ in
         hjem.users = {
           alice = {
             enable = true;
+            files = {
+              "bar.json" = {
+                generator = (pkgs.formats.toml {}).generate "baz.toml";
+                value = {baz = true;};
+              };
+            };
             xdg = {
               enable = true;
               cache = {
@@ -79,12 +85,18 @@ in
       machine.succeed("loginctl enable-linger alice")
       machine.wait_until_succeeds("systemctl --user --machine=alice@ is-active systemd-tmpfiles-setup.service")
 
-      # Test file created by Hjem
+
+      # Test XDG files created by Hjem
       machine.succeed("[ -L ~alice/customCacheHome/foo ]")
       machine.succeed("[ -L ~alice/customConfigHome/bar.json ]")
       machine.succeed("[ -L ~alice/customDataHome/baz.toml ]")
+      # Same name as config.home test file to verify proper merging
       machine.succeed("[ -L ~alice/customStateHome/foo ]")
 
+
+      # Basic test file created by Hjem
+      # Same name as cache.home test file to verify proper merging
+      machine.succeed("[ -L ~alice/bar.json ]")
       # Test regular files, created by systemd-tmpfiles
       machine.succeed("[ -d ~alice/user_tmpfiles_created ]")
       machine.succeed("[ -d ~alice/only_alice ]")
