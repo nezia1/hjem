@@ -30,7 +30,7 @@ in
             };
             xdg = {
               cache = {
-                home = userHome + "/customCacheHome";
+                directory = userHome + "/customCacheDirectory";
                 files = {
                   "foo" = {
                     text = "Hello world!";
@@ -38,7 +38,7 @@ in
                 };
               };
               config = {
-                home = userHome + "/customConfigHome";
+                directory = userHome + "/customConfigDirectory";
                 files = {
                   "bar.json" = {
                     generator = lib.generators.toJSON {};
@@ -47,7 +47,7 @@ in
                 };
               };
               data = {
-                home = userHome + "/customDataHome";
+                directory = userHome + "/customDataDirectory";
                 files = {
                   "baz.toml" = {
                     generator = (pkgs.formats.toml {}).generate "baz.toml";
@@ -56,7 +56,7 @@ in
                 };
               };
               state = {
-                home = userHome + "/customStateHome";
+                directory = userHome + "/customStateDirectory";
                 files = {
                   "foo" = {
                     source = pkgs.writeText "file-bar" "Hello World!";
@@ -86,15 +86,15 @@ in
 
 
       # Test XDG files created by Hjem
-      machine.succeed("[ -L ~alice/customCacheHome/foo ]")
-      machine.succeed("[ -L ~alice/customConfigHome/bar.json ]")
-      machine.succeed("[ -L ~alice/customDataHome/baz.toml ]")
-      # Same name as config.home test file to verify proper merging
-      machine.succeed("[ -L ~alice/customStateHome/foo ]")
+      machine.succeed("[ -L ~alice/customCacheDirectory/foo ]")
+      machine.succeed("[ -L ~alice/customConfigDirectory/bar.json ]")
+      machine.succeed("[ -L ~alice/customDataDirectory/baz.toml ]")
+      # Same name as config test file to verify proper merging
+      machine.succeed("[ -L ~alice/customStateDirectory/foo ]")
 
 
       # Basic test file created by Hjem
-      # Same name as cache.home test file to verify proper merging
+      # Same name as cache test file to verify proper merging
       machine.succeed("[ -L ~alice/bar.json ]")
       # Test regular files, created by systemd-tmpfiles
       machine.succeed("[ -d ~alice/user_tmpfiles_created ]")

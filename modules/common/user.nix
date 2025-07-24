@@ -191,7 +191,7 @@ in {
 
     xdg = {
       cache = {
-        home = mkOption {
+        directory = mkOption {
           type = path;
           default = "${cfg.directory}/.cache";
           defaultText = "~/.cache";
@@ -205,14 +205,14 @@ in {
         };
         files = mkOption {
           default = {};
-          type = attrsOf (fileType cfg.xdg.cache.home);
+          type = attrsOf (fileType cfg.xdg.cache.directory);
           example = {"foo.txt".source = "Hello World";};
           description = "Cache files to be managed by Hjem";
         };
       };
 
       config = {
-        home = mkOption {
+        directory = mkOption {
           type = path;
           default = "${cfg.directory}/.config";
           defaultText = "~/.config";
@@ -226,14 +226,14 @@ in {
         };
         files = mkOption {
           default = {};
-          type = attrsOf (fileType cfg.xdg.config.home);
+          type = attrsOf (fileType cfg.xdg.config.directory);
           example = {"foo.txt".source = "Hello World";};
           description = "Config files to be managed by Hjem";
         };
       };
 
       data = {
-        home = mkOption {
+        directory = mkOption {
           type = path;
           default = "${cfg.directory}/.local/share";
           defaultText = "~/.local/share";
@@ -247,14 +247,14 @@ in {
         };
         files = mkOption {
           default = {};
-          type = attrsOf (fileType cfg.xdg.data.home);
+          type = attrsOf (fileType cfg.xdg.data.directory);
           example = {"foo.txt".source = "Hello World";};
           description = "data files to be managed by Hjem";
         };
       };
 
       state = {
-        home = mkOption {
+        directory = mkOption {
           type = path;
           default = "${cfg.directory}/.local/state";
           defaultText = "~/.local/share";
@@ -268,7 +268,7 @@ in {
         };
         files = mkOption {
           default = {};
-          type = attrsOf (fileType cfg.xdg.state.home);
+          type = attrsOf (fileType cfg.xdg.state.directory);
           example = {"foo.txt".source = "Hello World";};
           description = "state files to be managed by Hjem";
         };
@@ -313,10 +313,10 @@ in {
   config = {
     environment = {
       sessionVariables = {
-        XDG_CACHE_HOME = mkIf (cfg.xdg.cache.home != "${cfg.directory}/.cache") cfg.xdg.cache.home;
-        XDG_CONFIG_HOME = mkIf (cfg.xdg.config.home != "${cfg.directory}/.config") cfg.xdg.config.home;
-        XDG_DATA_HOME = mkIf (cfg.xdg.data.home != "${cfg.directory}/.local/share") cfg.xdg.data.home;
-        XDG_STATE_HOME = mkIf (cfg.xdg.state.home != "${cfg.directory}/.local/state") cfg.xdg.state.home;
+        XDG_CACHE_HOME = mkIf (cfg.xdg.cache.directory != "${cfg.directory}/.cache") cfg.xdg.cache.directory;
+        XDG_CONFIG_HOME = mkIf (cfg.xdg.config.directory != "${cfg.directory}/.config") cfg.xdg.config.directory;
+        XDG_DATA_HOME = mkIf (cfg.xdg.data.directory != "${cfg.directory}/.local/share") cfg.xdg.data.directory;
+        XDG_STATE_HOME = mkIf (cfg.xdg.state.directory != "${cfg.directory}/.local/state") cfg.xdg.state.directory;
       };
       loadEnv = let
         toEnv = env:

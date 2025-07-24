@@ -18,7 +18,7 @@ in
           altLocation,
         }: {
           cache = {
-            home = mkIf altLocation (userHome + "/customCacheHome");
+            directory = mkIf altLocation (userHome + "/customCacheDirectory");
             files = {
               "foo" = {
                 text = "Hello world!";
@@ -27,7 +27,7 @@ in
             };
           };
           config = {
-            home = mkIf altLocation (userHome + "/customConfigHome");
+            directory = mkIf altLocation (userHome + "/customConfigDirectory");
             files = {
               "bar.json" = {
                 generator = lib.generators.toJSON {};
@@ -37,7 +37,7 @@ in
             };
           };
           data = {
-            home = mkIf altLocation (userHome + "/customDataHome");
+            directory = mkIf altLocation (userHome + "/customDataDirectory");
             files = {
               "baz.toml" = {
                 generator = (pkgs.formats.toml {}).generate "baz.toml";
@@ -47,7 +47,7 @@ in
             };
           };
           state = {
-            home = mkIf altLocation (userHome + "/customStateHome");
+            directory = mkIf altLocation (userHome + "/customStateDirectory");
             files = {
               "foo" = {
                 source = pkgs.writeText "file-bar" "Hello World!";
@@ -129,21 +129,21 @@ in
 
         with subtest("Alternate file locations get linked"):
           node1.succeed("${specialisations}/altFilesGetLinked/bin/switch-to-configuration test")
-          node1.succeed("test -L ${userHome}/customCacheHome/foo")
-          node1.succeed("test -L ${userHome}/customConfigHome/bar.json")
-          node1.succeed("test -L ${userHome}/customDataHome/baz.toml")
-          node1.succeed("test -L ${userHome}/customStateHome/foo")
-          # Same name as config.home test file to verify proper merging
+          node1.succeed("test -L ${userHome}/customCacheDirectory/foo")
+          node1.succeed("test -L ${userHome}/customConfigDirectory/bar.json")
+          node1.succeed("test -L ${userHome}/customDataDirectory/baz.toml")
+          node1.succeed("test -L ${userHome}/customStateDirectory/foo")
+          # Same name as config test file to verify proper merging
           node1.succeed("test -L ${userHome}/.config/foo")
           node1.succeed("grep \"Hello world!\" ${userHome}/.config/foo")
 
         with subtest("Alternate file locations get overwritten when changed"):
           node1.succeed("${specialisations}/altFilesGetLinked/bin/switch-to-configuration test")
           node1.succeed("${specialisations}/altFilesGetOverwritten/bin/switch-to-configuration test")
-          node1.succeed("test -L ${userHome}/customCacheHome/foo")
-          node1.succeed("test -L ${userHome}/customConfigHome/bar.json")
-          node1.succeed("test -L ${userHome}/customDataHome/baz.toml")
-          node1.succeed("test -L ${userHome}/customStateHome/foo")
+          node1.succeed("test -L ${userHome}/customCacheDirectory/foo")
+          node1.succeed("test -L ${userHome}/customConfigDirectory/bar.json")
+          node1.succeed("test -L ${userHome}/customDataDirectory/baz.toml")
+          node1.succeed("test -L ${userHome}/customStateDirectory/foo")
           node1.succeed("test -L ${userHome}/.config/foo")
           node1.succeed("grep \"Hello new world!\" ${userHome}/.config/foo")
       '';
