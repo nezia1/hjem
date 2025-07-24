@@ -29,7 +29,6 @@ in
               };
             };
             xdg = {
-              enable = true;
               cache = {
                 home = userHome + "/customCacheHome";
                 files = {

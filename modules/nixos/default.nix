@@ -5,7 +5,6 @@
   ...
 }: let
   inherit (lib.attrsets) filterAttrs mapAttrsToList;
-  inherit (lib.lists) optionals;
   inherit (lib.modules) mkIf mkMerge;
   inherit (lib.options) literalExpression mkOption;
   inherit (lib.strings) optionalString;
@@ -19,16 +18,13 @@
   enabledUsers = filterAttrs (_: u: u.enable) cfg.users;
   disabledUsers = filterAttrs (_: u: !u.enable) cfg.users;
 
-  userFiles = user:
-    [
-      user.files
-    ]
-    ++ (optionals user.xdg.enable [
-      user.xdg.cache.files
-      user.xdg.config.files
-      user.xdg.data.files
-      user.xdg.state.files
-    ]);
+  userFiles = user: [
+    user.files
+    user.xdg.cache.files
+    user.xdg.config.files
+    user.xdg.data.files
+    user.xdg.state.files
+  ];
 
   linker = getExe cfg.linker;
 

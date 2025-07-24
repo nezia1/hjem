@@ -11,10 +11,14 @@ in
         lib,
         ...
       }: let
-        xdg = {clobber}: {
-          enable = true;
+        inherit (lib.modules) mkIf;
+
+        xdg = {
+          clobber,
+          altLocation,
+        }: {
           cache = {
-            home = userHome + "/customCacheHome";
+            home = mkIf altLocation (userHome + "/customCacheHome");
             files = {
               "foo" = {
                 text = "Hello world!";
@@ -23,7 +27,7 @@ in
             };
           };
           config = {
-            home = userHome + "/customConfigHome";
+            home = mkIf altLocation (userHome + "/customConfigHome");
             files = {
               "bar.json" = {
                 generator = lib.generators.toJSON {};
@@ -33,7 +37,7 @@ in
             };
           };
           data = {
-            home = userHome + "/customDataHome";
+            home = mkIf altLocation (userHome + "/customDataHome");
             files = {
               "baz.toml" = {
                 generator = (pkgs.formats.toml {}).generate "baz.toml";
@@ -43,7 +47,7 @@ in
             };
           };
           state = {
-            home = userHome + "/customStateHome";
+            home = mkIf altLocation (userHome + "/customStateHome");
             files = {
               "foo" = {
                 source = pkgs.writeText "file-bar" "Hello World!";
@@ -74,20 +78,34 @@ in
         };
 
         specialisation = {
-          filesGetsLinked.configuration = {
+          defaultFilesGetLinked.configuration = {
+            hjem.users.alice = {
+              xdg = xdg {
+                clobber = false;
+                altLocation = false;
+              };
+            };
+          };
+          altFilesGetLinked.configuration = {
             hjem.users.alice = {
               files.".config/foo".text = "Hello world!";
-              xdg = xdg {clobber = false;};
+              xdg = xdg {
+                clobber = false;
+                altLocation = true;
+              };
             };
           };
 
-          filesGetsOverwritten.configuration = {
+          altFilesGetOverwritten.configuration = {
             hjem.users.alice = {
               files.".config/foo" = {
                 text = "Hello new world!";
                 clobber = true;
               };
-              xdg = xdg {clobber = true;};
+              xdg = xdg {
+                clobber = true;
+                altLocation = true;
+              };
             };
           };
         };
@@ -102,8 +120,15 @@ in
       ''
         node1.succeed("loginctl enable-linger alice")
 
-        with subtest("File gets linked"):
-          node1.succeed("${specialisations}/filesGetsLinked/bin/switch-to-configuration test")
+        with subtest("Default file locations get liked"):
+          node1.succeed("${specialisations}/defaultFilesGetLinked/bin/switch-to-configuration test")
+          node1.succeed("test -L ${userHome}/.cache/foo")
+          node1.succeed("test -L ${userHome}/.config/bar.json")
+          node1.succeed("test -L ${userHome}/.local/share/baz.toml")
+          node1.succeed("test -L ${userHome}/.local/state/foo")
+
+        with subtest("Alternate file locations get linked"):
+          node1.succeed("${specialisations}/altFilesGetLinked/bin/switch-to-configuration test")
           node1.succeed("test -L ${userHome}/customCacheHome/foo")
           node1.succeed("test -L ${userHome}/customConfigHome/bar.json")
           node1.succeed("test -L ${userHome}/customDataHome/baz.toml")
@@ -112,9 +137,9 @@ in
           node1.succeed("test -L ${userHome}/.config/foo")
           node1.succeed("grep \"Hello world!\" ${userHome}/.config/foo")
 
-        with subtest("File gets overwritten when changed"):
-          node1.succeed("${specialisations}/filesGetsLinked/bin/switch-to-configuration test")
-          node1.succeed("${specialisations}/filesGetsOverwritten/bin/switch-to-configuration test")
+        with subtest("Alternate file locations get overwritten when changed"):
+          node1.succeed("${specialisations}/altFilesGetLinked/bin/switch-to-configuration test")
+          node1.succeed("${specialisations}/altFilesGetOverwritten/bin/switch-to-configuration test")
           node1.succeed("test -L ${userHome}/customCacheHome/foo")
           node1.succeed("test -L ${userHome}/customConfigHome/bar.json")
           node1.succeed("test -L ${userHome}/customDataHome/baz.toml")

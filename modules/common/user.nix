@@ -190,8 +190,6 @@ in {
     };
 
     xdg = {
-      enable = mkEnableOption "XDG management for this user";
-
       cache = {
         home = mkOption {
           type = path;
@@ -202,7 +200,7 @@ in {
             {option}`hjem.users.<name>.xdg.cache.files` will be relative to by default.
 
             Adds {env}`XDG_CACHE_HOME` to {option}`environment.sessionVariables` for
-            this user if {option}`xdg.enable` is `true`.
+            this user if changed.
           '';
         };
         files = mkOption {
@@ -223,7 +221,7 @@ in {
             {option}`hjem.users.<name>.xdg.config.files` will be relative to by default.
 
             Adds {env}`XDG_CONFIG_HOME` to {option}`environment.sessionVariables` for
-            this user if {option}`xdg.enable` is `true`.
+            this user if changed.
           '';
         };
         files = mkOption {
@@ -244,7 +242,7 @@ in {
             {option}`hjem.users.<name>.xdg.data.files` will be relative to by default.
 
             Adds {env}`XDG_DATA_HOME` to {option}`environment.sessionVariables` for
-            this user if {option}`xdg.enable` is `true`.
+            this user if changed.
           '';
         };
         files = mkOption {
@@ -265,7 +263,7 @@ in {
             {option}`hjem.users.<name>.xdg.state.files` will be relative to by default.
 
             Adds {env}`XDG_STATE_HOME` to {option}`environment.sessionVariables` for
-            this user if {option}`xdg.enable` is `true`.
+            this user if changed.
           '';
         };
         files = mkOption {
@@ -314,11 +312,11 @@ in {
 
   config = {
     environment = {
-      sessionVariables = mkIf cfg.xdg.enable {
-        XDG_CACHE_HOME = cfg.xdg.cache.home;
-        XDG_CONFIG_HOME = cfg.xdg.config.home;
-        XDG_DATA_HOME = cfg.xdg.data.home;
-        XDG_STATE_HOME = cfg.xdg.state.home;
+      sessionVariables = {
+        XDG_CACHE_HOME = mkIf (cfg.xdg.cache.home != "${cfg.directory}/.cache") cfg.xdg.cache.home;
+        XDG_CONFIG_HOME = mkIf (cfg.xdg.config.home != "${cfg.directory}/.config") cfg.xdg.config.home;
+        XDG_DATA_HOME = mkIf (cfg.xdg.data.home != "${cfg.directory}/.local/share") cfg.xdg.data.home;
+        XDG_STATE_HOME = mkIf (cfg.xdg.state.home != "${cfg.directory}/.local/state") cfg.xdg.state.home;
       };
       loadEnv = let
         toEnv = env:
