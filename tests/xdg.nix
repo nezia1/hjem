@@ -23,9 +23,8 @@ in
           alice = {
             enable = true;
             files = {
-              "bar.json" = {
-                generator = (pkgs.formats.toml {}).generate "baz.toml";
-                value = {baz = true;};
+              "foo" = {
+                text = "Hello world!";
               };
             };
             xdg = {
@@ -42,7 +41,7 @@ in
                 files = {
                   "bar.json" = {
                     generator = lib.generators.toJSON {};
-                    value = {bar = true;};
+                    value = {bar = "Hello second world!";};
                   };
                 };
               };
@@ -51,7 +50,7 @@ in
                 files = {
                   "baz.toml" = {
                     generator = (pkgs.formats.toml {}).generate "baz.toml";
-                    value = {baz = true;};
+                    value = {baz = "Hello third world!";};
                   };
                 };
               };
@@ -59,7 +58,7 @@ in
                 directory = userHome + "/customStateDirectory";
                 files = {
                   "foo" = {
-                    source = pkgs.writeText "file-bar" "Hello World!";
+                    source = pkgs.writeText "file-bar" "Hello fourth world!";
                   };
                 };
               };
@@ -84,20 +83,23 @@ in
       machine.succeed("loginctl enable-linger alice")
       machine.wait_until_succeeds("systemctl --user --machine=alice@ is-active systemd-tmpfiles-setup.service")
 
-
       # Test XDG files created by Hjem
-      machine.succeed("[ -L ~alice/customCacheDirectory/foo ]")
-      machine.succeed("[ -L ~alice/customConfigDirectory/bar.json ]")
-      machine.succeed("[ -L ~alice/customDataDirectory/baz.toml ]")
-      # Same name as config test file to verify proper merging
-      machine.succeed("[ -L ~alice/customStateDirectory/foo ]")
+      with subtest("XDG files created by Hjem"):
+        machine.succeed("[ -L ~alice/customCacheDirectory/foo ]")
+        machine.succeed("grep \"Hello world!\" ~alice/customCacheDirectory/foo")
+        machine.succeed("[ -L ~alice/customConfigDirectory/bar.json ]")
+        machine.succeed("grep \"Hello second world!\" ~alice/customConfigDirectory/bar.json")
+        machine.succeed("[ -L ~alice/customDataDirectory/baz.toml ]")
+        machine.succeed("grep \"Hello third world!\" ~alice/customDataDirectory/baz.toml")
+        # Same name as config test file to verify proper merging
+        machine.succeed("[ -L ~alice/customStateDirectory/foo ]")
+        machine.succeed("grep \"Hello fourth world!\" ~alice/customStateDirectory/foo")
 
-
-      # Basic test file created by Hjem
-      # Same name as cache test file to verify proper merging
-      machine.succeed("[ -L ~alice/bar.json ]")
-      # Test regular files, created by systemd-tmpfiles
-      machine.succeed("[ -d ~alice/user_tmpfiles_created ]")
-      machine.succeed("[ -d ~alice/only_alice ]")
+      with subtest("Basic test file for Hjem"):
+        machine.succeed("[ -L ~alice/foo ]") # Same name as cache test file to verify proper merging
+        machine.succeed("grep \"Hello world!\" ~alice/foo")
+        # Test regular files, created by systemd-tmpfiles
+        machine.succeed("[ -d ~alice/user_tmpfiles_created ]")
+        machine.succeed("[ -d ~alice/only_alice ]")
     '';
   }

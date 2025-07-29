@@ -12,6 +12,7 @@ in
         ...
       }: let
         inherit (lib.modules) mkIf;
+        inherit (lib.strings) optionalString;
 
         xdg = {
           clobber,
@@ -21,7 +22,7 @@ in
             directory = mkIf altLocation (userHome + "/customCacheDirectory");
             files = {
               "foo" = {
-                text = "Hello world!";
+                text = "Hello ${optionalString clobber "new "}world!";
                 inherit clobber;
               };
             };
@@ -31,7 +32,7 @@ in
             files = {
               "bar.json" = {
                 generator = lib.generators.toJSON {};
-                value = {bar = true;};
+                value = {bar = "Hello ${optionalString clobber "new "}second world!";};
                 inherit clobber;
               };
             };
@@ -41,7 +42,7 @@ in
             files = {
               "baz.toml" = {
                 generator = (pkgs.formats.toml {}).generate "baz.toml";
-                value = {baz = true;};
+                value = {baz = "Hello ${optionalString clobber "new "}third world!";};
                 inherit clobber;
               };
             };
@@ -50,7 +51,7 @@ in
             directory = mkIf altLocation (userHome + "/customStateDirectory");
             files = {
               "foo" = {
-                source = pkgs.writeText "file-bar" "Hello World!";
+                source = pkgs.writeText "file-bar" "Hello ${optionalString clobber "new "}fourth world!";
                 inherit clobber;
               };
             };
@@ -95,7 +96,6 @@ in
               };
             };
           };
-
           altFilesGetOverwritten.configuration = {
             hjem.users.alice = {
               files.".config/foo" = {
@@ -123,28 +123,41 @@ in
         with subtest("Default file locations get liked"):
           node1.succeed("${specialisations}/defaultFilesGetLinked/bin/switch-to-configuration test")
           node1.succeed("test -L ${userHome}/.cache/foo")
+          node1.succeed("grep \"Hello world!\" ~alice/.cache/foo")
           node1.succeed("test -L ${userHome}/.config/bar.json")
+          node1.succeed("grep \"Hello second world!\" ~alice/.config/bar.json")
           node1.succeed("test -L ${userHome}/.local/share/baz.toml")
+          node1.succeed("grep \"Hello third world!\" ~alice/.local/share/baz.toml")
           node1.succeed("test -L ${userHome}/.local/state/foo")
+          node1.succeed("grep \"Hello fourth world!\" ~alice/.local/state/foo")
 
         with subtest("Alternate file locations get linked"):
           node1.succeed("${specialisations}/altFilesGetLinked/bin/switch-to-configuration test")
           node1.succeed("test -L ${userHome}/customCacheDirectory/foo")
+          node1.succeed("grep \"Hello world!\" ~alice/customCacheDirectory/foo")
           node1.succeed("test -L ${userHome}/customConfigDirectory/bar.json")
+          node1.succeed("grep \"Hello second world!\" ~alice/customConfigDirectory/bar.json")
           node1.succeed("test -L ${userHome}/customDataDirectory/baz.toml")
+          node1.succeed("grep \"Hello third world!\" ~alice/customDataDirectory/baz.toml")
           node1.succeed("test -L ${userHome}/customStateDirectory/foo")
+          node1.succeed("grep \"Hello fourth world!\" ~alice/customStateDirectory/foo")
           # Same name as config test file to verify proper merging
           node1.succeed("test -L ${userHome}/.config/foo")
-          node1.succeed("grep \"Hello world!\" ${userHome}/.config/foo")
+          node1.succeed("grep \"Hello world!\" ~alice/.config/foo")
 
         with subtest("Alternate file locations get overwritten when changed"):
           node1.succeed("${specialisations}/altFilesGetLinked/bin/switch-to-configuration test")
           node1.succeed("${specialisations}/altFilesGetOverwritten/bin/switch-to-configuration test")
           node1.succeed("test -L ${userHome}/customCacheDirectory/foo")
+          node1.succeed("grep \"Hello new world!\" ~alice/customCacheDirectory/foo")
           node1.succeed("test -L ${userHome}/customConfigDirectory/bar.json")
+          node1.succeed("grep \"Hello new second world!\" ~alice/customConfigDirectory/bar.json")
           node1.succeed("test -L ${userHome}/customDataDirectory/baz.toml")
+          node1.succeed("grep \"Hello new third world!\" ~alice/customDataDirectory/baz.toml")
           node1.succeed("test -L ${userHome}/customStateDirectory/foo")
+          node1.succeed("grep \"Hello new fourth world!\" ~alice/customStateDirectory/foo")
+          # Same name as config test file to verify proper merging
           node1.succeed("test -L ${userHome}/.config/foo")
-          node1.succeed("grep \"Hello new world!\" ${userHome}/.config/foo")
+          node1.succeed("grep \"Hello new world!\" ~alice/.config/foo")
       '';
   }
