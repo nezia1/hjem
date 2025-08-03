@@ -4,6 +4,7 @@
 # be avoided here.
 {
   config,
+  options,
   pkgs,
   lib,
   ...
@@ -313,10 +314,10 @@ in {
   config = {
     environment = {
       sessionVariables = {
-        XDG_CACHE_HOME = mkIf (cfg.xdg.cache.directory != "${cfg.directory}/.cache") cfg.xdg.cache.directory;
-        XDG_CONFIG_HOME = mkIf (cfg.xdg.config.directory != "${cfg.directory}/.config") cfg.xdg.config.directory;
-        XDG_DATA_HOME = mkIf (cfg.xdg.data.directory != "${cfg.directory}/.local/share") cfg.xdg.data.directory;
-        XDG_STATE_HOME = mkIf (cfg.xdg.state.directory != "${cfg.directory}/.local/state") cfg.xdg.state.directory;
+        XDG_CACHE_HOME = mkIf (cfg.xdg.cache.directory != options.xdg.cache.directory.default) cfg.xdg.cache.directory;
+        XDG_CONFIG_HOME = mkIf (cfg.xdg.config.directory != options.xdg.config.directory.default) cfg.xdg.config.directory;
+        XDG_DATA_HOME = mkIf (cfg.xdg.data.directory != options.xdg.data.directory.default) cfg.xdg.data.directory;
+        XDG_STATE_HOME = mkIf (cfg.xdg.state.directory != options.xdg.state.directory.default) cfg.xdg.state.directory;
       };
       loadEnv = let
         toEnv = env:
