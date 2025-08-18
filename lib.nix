@@ -4,9 +4,10 @@
   pkgs,
   ...
 }: let
+  inherit (builtins) isList;
   inherit (lib.modules) mkDefault mkDerivedConfig mkIf mkMerge;
   inherit (lib.options) literalExpression mkEnableOption mkOption;
-  inherit (lib.strings) hasPrefix;
+  inherit (lib.strings) concatMapStringsSep hasPrefix;
   inherit (lib.types) addCheck anything attrsOf bool either functionTo lines nullOr path str submodule;
   cfg = config;
 in {
@@ -134,5 +135,10 @@ in {
             })
           ];
       });
+
+    toEnv = env:
+      if isList env
+      then concatMapStringsSep ":" toString env
+      else toString env;
   };
 }

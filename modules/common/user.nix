@@ -10,13 +10,12 @@
   hjem,
   ...
 }: let
-  inherit (hjem) fileTypeRelativeTo;
+  inherit (hjem) fileTypeRelativeTo toEnv;
   inherit (lib.attrsets) mapAttrsToList;
-  inherit (lib.strings) concatLines concatMapStringsSep;
+  inherit (lib.strings) concatLines;
   inherit (lib.modules) mkIf;
   inherit (lib.options) literalExpression mkEnableOption mkOption;
   inherit (lib.types) attrsOf bool int listOf package path str oneOf;
-  inherit (builtins) isList;
 
   cfg = config;
 in {
@@ -198,17 +197,11 @@ in {
         XDG_DATA_HOME = mkIf (cfg.xdg.data.directory != options.xdg.data.directory.default) cfg.xdg.data.directory;
         XDG_STATE_HOME = mkIf (cfg.xdg.state.directory != options.xdg.state.directory.default) cfg.xdg.state.directory;
       };
-      loadEnv = let
-        toEnv = env:
-          if isList env
-          then concatMapStringsSep ":" toString env
-          else toString env;
-      in
-        lib.pipe cfg.environment.sessionVariables [
-          (mapAttrsToList (name: value: "export ${name}=\"${toEnv value}\""))
-          concatLines
-          (pkgs.writeShellScript "load-env")
-        ];
+      loadEnv = lib.pipe cfg.environment.sessionVariables [
+        (mapAttrsToList (name: value: "export ${name}=\"${toEnv value}\""))
+        concatLines
+        (pkgs.writeShellScript "load-env")
+      ];
     };
     assertions = [
       {
