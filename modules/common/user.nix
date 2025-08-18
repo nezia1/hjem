@@ -7,146 +7,25 @@
   options,
   pkgs,
   lib,
+  hjem,
   ...
 }: let
+  inherit (hjem) fileTypeRelativeTo;
   inherit (lib.attrsets) mapAttrsToList;
   inherit (lib.strings) concatLines concatMapStringsSep;
-  inherit (lib.modules) mkDefault mkDerivedConfig mkIf mkMerge;
+  inherit (lib.modules) mkIf;
   inherit (lib.options) literalExpression mkEnableOption mkOption;
-  inherit (lib.strings) hasPrefix;
-  inherit (lib.types) addCheck anything attrsOf bool either functionTo int lines listOf nullOr package path str submodule oneOf;
+  inherit (lib.types) attrsOf bool int listOf package path str oneOf;
   inherit (builtins) isList;
 
   cfg = config;
-
-  fileType = relativeTo:
-    submodule ({
-      name,
-      target,
-      config,
-      options,
-      ...
-    }: {
-      options = {
-        enable =
-          mkEnableOption "creation of this file"
-          // {
-            default = true;
-            example = false;
-          };
-
-        target = mkOption {
-          type = str;
-          apply = p:
-            if hasPrefix "/" p
-            then throw "This option cannot handle absolute paths yet!"
-            else "${config.relativeTo}/${p}";
-          defaultText = "name";
-          description = ''
-            Path to target file relative to {option}`hjem.users.<name>.files.<file>.relativeTo`.
-          '';
-        };
-
-        text = mkOption {
-          default = null;
-          type = nullOr lines;
-          description = "Text of the file";
-        };
-
-        source = mkOption {
-          type = nullOr path;
-          default = null;
-          description = "Path of the source file or directory";
-        };
-
-        generator = lib.mkOption {
-          # functionTo doesn't actually check the return type, so do that ourselves
-          type = addCheck (nullOr (functionTo (either options.source.type options.text.type))) (x: let
-            generatedValue = x config.value;
-            generatesDrv = options.source.type.check generatedValue;
-            generatesStr = options.text.type.check generatedValue;
-          in
-            x != null -> (generatesDrv || generatesStr));
-          default = null;
-          description = ''
-            Function that when applied to `value` will create the `source` or `text` of the file.
-
-            Detection is automatic, as we check if the `generator` generates a derivation or a string after applying to `value`.
-          '';
-          example = literalExpression "lib.generators.toGitINI";
-        };
-
-        value = lib.mkOption {
-          type = nullOr (attrsOf anything);
-          default = null;
-          description = "Value passed to the `generator`.";
-          example = {
-            user.email = "me@example.com";
-          };
-        };
-
-        executable = mkOption {
-          type = bool;
-          default = false;
-          example = true;
-          description = ''
-            Whether to set the execute bit on the target file.
-          '';
-        };
-
-        clobber = mkOption {
-          type = bool;
-          default = cfg.clobberFiles;
-          defaultText = literalExpression "config.hjem.clobberByDefault";
-          description = ''
-            Whether to "clobber" existing target paths.
-
-            - If using the **systemd-tmpfiles** hook (Linux only), tmpfile rules
-              will be constructed with `L+` (*re*create) instead of `L`
-              (create) type while this is set to `true`.
-          '';
-        };
-
-        relativeTo = mkOption {
-          internal = true;
-          type = path;
-          default = relativeTo;
-          description = "Path to which symlinks will be relative to";
-          apply = x:
-            assert (hasPrefix "/" x || abort "Relative path ${x} cannot be used for files.<file>.relativeTo"); x;
-        };
-      };
-
-      config = let
-        generatedValue = config.generator config.value;
-        hasGenerator = config.generator != null;
-        generatesDrv = options.source.type.check generatedValue;
-        generatesStr = options.text.type.check generatedValue;
-      in
-        mkMerge [
-          {
-            target = mkDefault name;
-            source = mkIf (config.text != null) (mkDerivedConfig options.text (text:
-              pkgs.writeTextFile {
-                inherit name text;
-                inherit (config) executable;
-              }));
-          }
-
-          (lib.mkIf (hasGenerator && generatesDrv) {
-            source = mkDefault generatedValue;
-          })
-
-          (lib.mkIf (hasGenerator && generatesStr) {
-            text = mkDefault generatedValue;
-          })
-        ];
-    });
 in {
   imports = [
     # Makes "assertions" option available without having to duplicate the work
     # already done in the Nixpkgs module.
     (pkgs.path + "/nixos/modules/misc/assertions.nix")
+
+    ../../lib.nix
   ];
 
   options = {
@@ -185,7 +64,7 @@ in {
 
     files = mkOption {
       default = {};
-      type = attrsOf (fileType cfg.directory);
+      type = attrsOf (fileTypeRelativeTo cfg.directory);
       example = {".config/foo.txt".source = "Hello World";};
       description = "Files to be managed by Hjem";
     };
@@ -206,7 +85,7 @@ in {
         };
         files = mkOption {
           default = {};
-          type = attrsOf (fileType cfg.xdg.cache.directory);
+          type = attrsOf (fileTypeRelativeTo cfg.xdg.cache.directory);
           example = {"foo.txt".source = "Hello World";};
           description = "Cache files to be managed by Hjem";
         };
@@ -227,7 +106,7 @@ in {
         };
         files = mkOption {
           default = {};
-          type = attrsOf (fileType cfg.xdg.config.directory);
+          type = attrsOf (fileTypeRelativeTo cfg.xdg.config.directory);
           example = {"foo.txt".source = "Hello World";};
           description = "Config files to be managed by Hjem";
         };
@@ -248,7 +127,7 @@ in {
         };
         files = mkOption {
           default = {};
-          type = attrsOf (fileType cfg.xdg.data.directory);
+          type = attrsOf (fileTypeRelativeTo cfg.xdg.data.directory);
           example = {"foo.txt".source = "Hello World";};
           description = "data files to be managed by Hjem";
         };
@@ -269,7 +148,7 @@ in {
         };
         files = mkOption {
           default = {};
-          type = attrsOf (fileType cfg.xdg.state.directory);
+          type = attrsOf (fileTypeRelativeTo cfg.xdg.state.directory);
           example = {"foo.txt".source = "Hello World";};
           description = "state files to be managed by Hjem";
         };
