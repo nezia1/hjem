@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  osOptions,
   pkgs,
   ...
 }: let
@@ -12,6 +13,8 @@
   cfg = config;
 in {
   _module.args.hjem = {
+    envVarType = osOptions.environment.variables.type;
+
     fileTypeRelativeTo = rootDir:
       submodule ({
         name,

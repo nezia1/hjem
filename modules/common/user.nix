@@ -4,18 +4,18 @@
 # be avoided here.
 {
   config,
+  hjem,
+  lib,
   options,
   pkgs,
-  lib,
-  hjem,
   ...
 }: let
-  inherit (hjem) fileTypeRelativeTo toEnv;
+  inherit (hjem) envVarType fileTypeRelativeTo toEnv;
   inherit (lib.attrsets) mapAttrsToList;
   inherit (lib.strings) concatLines;
   inherit (lib.modules) mkIf;
   inherit (lib.options) literalExpression mkEnableOption mkOption;
-  inherit (lib.types) attrsOf bool int listOf package path str oneOf;
+  inherit (lib.types) attrsOf bool listOf package path str;
 
   cfg = config;
 in {
@@ -174,7 +174,7 @@ in {
         '';
       };
       sessionVariables = mkOption {
-        type = attrsOf (oneOf [(listOf (oneOf [int str path])) int str path]);
+        type = envVarType;
         default = {};
         example = {
           EDITOR = "nvim";

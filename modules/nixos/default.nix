@@ -1,7 +1,8 @@
 {
   config,
-  pkgs,
   lib,
+  options,
+  pkgs,
   ...
 }: let
   inherit (lib.attrsets) filterAttrs mapAttrsToList;
@@ -79,6 +80,7 @@
       // {
         inherit pkgs;
         osConfig = config;
+        osOptions = options;
       };
     modules =
       concatLists
